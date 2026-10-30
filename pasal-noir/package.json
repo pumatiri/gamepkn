@@ -1,0 +1,16 @@
+{
+  "name": "pasal-noir",
+  "version": "1.0.0",
+  "description": "Pasal Noir: game edukasi PKN SMP berbasis Google Apps Script (Detektif Konstitusi).",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node scripts/check.js",
+    "login": "clasp login",
+    "push": "clasp push",
+    "deploy": "clasp push && clasp deploy"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
+}

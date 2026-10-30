@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark light">
+<script>try { if (localStorage.getItem('pn_theme') === 'light') document.documentElement.classList.add('light'); } catch (e) {}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pasal Noir — Detektif Konstitusi</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Special+Elite&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'], type: ['"Special Elite"', 'monospace'] },
+    colors: { ink: { 950: '#060a13', 900: '#0b1220', 800: '#111a2e', 700: '#1a2640', 600: '#26365a' }, paper: '#f3ead3' }
+  } }
+};
+</script>
+<style>
+  :root { --amber: #f5b942; }
+  html, body { height: 100%; }
+  body { background: #0b1220; color: #e5e9f2; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; overflow-x: hidden; }
+  /* ---------- Latar noir: grid pattern + lampu sorot ---------- */
+  #bg { position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(245,185,66,.16), transparent 60%),
+      radial-gradient(700px 500px at 100% 10%, rgba(56,189,248,.10), transparent 60%),
+      radial-gradient(800px 600px at 50% 120%, rgba(244,63,94,.08), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M48 0H0v48' fill='none' stroke='%23ffffff' stroke-opacity='.035'/%3E%3Ccircle cx='0' cy='0' r='1.2' fill='%23f5b942' fill-opacity='.25'/%3E%3C/svg%3E"),
+      #0b1220; }
+  #bg::after { content: ''; position: absolute; inset: 0;
+    background: conic-gradient(from 200deg at 12% -5%, transparent 0 8deg, rgba(245,185,66,.07) 12deg, transparent 22deg);
+    animation: sweep 9s ease-in-out infinite alternate; }
+  @keyframes sweep { from { transform: rotate(-4deg) } to { transform: rotate(5deg) } }
+  /* ---------- Animasi ---------- */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: none } }
+  @keyframes float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)) } 50% { transform: translateY(-10px) rotate(var(--r,0deg)) } }
+  @keyframes stamp { 0% { opacity: 0; transform: scale(2.6) rotate(-18deg) } 60% { opacity: 1; transform: scale(.92) rotate(-8deg) } 100% { opacity: 1; transform: scale(1) rotate(-8deg) } }
+  @keyframes pop { 0% { transform: scale(.6); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+  @keyframes shake { 0%,100% { transform: translateX(0) } 20%,60% { transform: translateX(-7px) } 40%,80% { transform: translateX(7px) } }
+  @keyframes glow { 0%,100% { box-shadow: 0 0 0 0 rgba(245,185,66,.35) } 50% { box-shadow: 0 0 28px 4px rgba(245,185,66,.35) } }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  @keyframes fall { to { transform: translateY(105vh) rotate(720deg); opacity: .9 } }
+  .fade-up { animation: fadeUp .6s cubic-bezier(.2,.7,.2,1) both }
+  .d1 { animation-delay: .08s } .d2 { animation-delay: .16s } .d3 { animation-delay: .24s } .d4 { animation-delay: .32s }
+  .float { animation: float 5s ease-in-out infinite }
+  .shake { animation: shake .45s }
+  .view-enter { animation: fadeUp .45s ease both }
+  /* ---------- Komponen ---------- */
+  .glass { background: linear-gradient(180deg, rgba(26,38,64,.72), rgba(17,26,46,.72)); border: 1px solid rgba(255,255,255,.07); backdrop-filter: blur(14px); box-shadow: 0 20px 50px -20px rgba(0,0,0,.7); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; font-weight: 700; border-radius: .85rem; padding: .7rem 1.2rem; transition: all .2s ease; cursor: pointer; user-select: none; }
+  .btn:active { transform: scale(.97) }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-amber { background: linear-gradient(135deg, #fcd34d, #f59e0b); color: #1a1205; box-shadow: 0 8px 24px -8px rgba(245,158,11,.7); }
+  .btn-amber:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-2px); box-shadow: 0 12px 28px -8px rgba(245,158,11,.8); }
+  .btn-ghost { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e5e9f2; }
+  .btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,.12); }
+  .btn-danger { background: linear-gradient(135deg, #fb7185, #e11d48); color: #fff; box-shadow: 0 8px 24px -8px rgba(225,29,72,.7); }
+  .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
+  .iconbtn { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: .8rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: #cbd5e1; transition: all .2s; }
+  .iconbtn:hover { background: rgba(245,185,66,.15); color: #fcd34d; border-color: rgba(245,185,66,.4); }
+  .input { width: 100%; background: rgba(6,10,19,.6); border: 1px solid rgba(255,255,255,.1); border-radius: .8rem; padding: .75rem 1rem .75rem 2.75rem; color: #f1f5f9; outline: none; transition: all .2s; }
+  .input:focus { border-color: #f5b942; box-shadow: 0 0 0 4px rgba(245,185,66,.15); }
+  .input::placeholder { color: #64748b }
+  .field { position: relative } .field > i.lead { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: .9rem; pointer-events: none }
+  .field:focus-within > i.lead { color: #f5b942 }
+  .tabbtn { padding: .6rem 1.1rem; border-radius: .75rem; font-weight: 700; font-size: .9rem; color: #94a3b8; transition: all .2s; }
+  .tabbtn.on { background: rgba(245,185,66,.14); color: #fcd34d; box-shadow: inset 0 0 0 1px rgba(245,185,66,.35); }
+  .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px } .scroll-thin::-webkit-scrollbar-thumb { background: #26365a; border-radius: 8px }
+  /* Kertas bukti */
+  .paper { background: #f3ead3; color: #2b2416; position: relative;
+    background-image: repeating-linear-gradient(0deg, transparent 0 27px, rgba(120,90,40,.10) 27px 28px); box-shadow: 0 14px 30px -12px rgba(0,0,0,.7); }
+  .paper::before { content: ''; position: absolute; top: -10px; left: 50%; width: 76px; height: 22px; transform: translateX(-50%) rotate(-2deg); background: rgba(245,185,66,.55); border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .typewriter { font-family: 'Special Elite', monospace; }
+  .stamp { display: inline-block; border: 4px solid; border-radius: .6rem; padding: .25rem 1rem; font-family: 'Special Elite', monospace; letter-spacing: .12em; text-transform: uppercase; transform: rotate(-8deg); animation: stamp .55s cubic-bezier(.2,.8,.2,1) both; }
+  .opt { text-align: left; width: 100%; display: flex; gap: .9rem; align-items: flex-start; padding: .9rem 1rem; border-radius: 1rem; background: rgba(6,10,19,.55); border: 1.5px solid rgba(255,255,255,.09); transition: all .18s ease; cursor: pointer; }
+  .opt:hover:not(.locked) { border-color: rgba(245,185,66,.6); background: rgba(245,185,66,.08); transform: translateX(4px); }
+  .opt .lt { flex: none; width: 2rem; height: 2rem; border-radius: .6rem; display: grid; place-items: center; font-weight: 800; background: rgba(255,255,255,.08); color: #cbd5e1; }
+  .opt.sel { border-color: #f5b942; background: rgba(245,185,66,.12); } .opt.sel .lt { background: #f5b942; color: #1a1205 }
+  .opt.ok { border-color: #34d399; background: rgba(52,211,153,.12); } .opt.ok .lt { background: #34d399; color: #04241a }
+  .opt.bad { border-color: #fb7185; background: rgba(251,113,133,.12); animation: shake .45s } .opt.bad .lt { background: #fb7185; color: #2a0510 }
+  .opt.locked { cursor: default; }
+  .clue { transition: transform .2s ease, box-shadow .2s ease; }
+  .clue:hover { transform: translateY(-3px) rotate(-.4deg); }
+  .blur-lock { filter: blur(5px); user-select: none; }
+  .case-card { transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+  .case-card:hover { transform: translateY(-6px); border-color: rgba(245,185,66,.5); box-shadow: 0 24px 40px -18px rgba(245,185,66,.25); }
+  .bar { height: .6rem; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden }
+  .bar > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f59e0b, #fcd34d); transition: width .8s cubic-bezier(.2,.8,.2,1) }
+  .star { color: #334155; transition: all .4s } .star.on { color: #fbbf24; filter: drop-shadow(0 0 10px rgba(251,191,36,.7)); animation: pop .5s both }
+  /* Dialog kustom */
+  .modal-back { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1rem; background: rgba(4,7,14,.72); backdrop-filter: blur(6px); animation: fadeIn .2s both }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  .modal-card { width: 100%; max-width: 26rem; border-radius: 1.4rem; padding: 1.6rem; background: linear-gradient(180deg, #1a2640, #111a2e); border: 1px solid rgba(255,255,255,.1); box-shadow: 0 30px 80px -20px rgba(0,0,0,.9), 0 0 0 1px rgba(245,185,66,.08); animation: pop .35s cubic-bezier(.2,.9,.3,1.2) both }
+  .modal-card.wide { max-width: 40rem; max-height: 88vh; overflow: auto }
+  .toast { display: flex; gap: .75rem; align-items: center; padding: .8rem 1rem; border-radius: 1rem; background: #111a2e; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 16px 40px -12px rgba(0,0,0,.8); animation: fadeUp .35s both; min-width: 14rem; max-width: 22rem }
+  .confetti { position: fixed; top: -20px; width: 10px; height: 16px; z-index: 80; opacity: 0; animation: fall linear forwards; pointer-events: none }
+  .spinner { width: 54px; height: 54px; border-radius: 50%; border: 4px solid rgba(255,255,255,.1); border-top-color: #f5b942; animation: spin .9s linear infinite }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: .88rem }
+  table.tbl th { text-align: left; font-weight: 700; color: #94a3b8; padding: .7rem .8rem; border-bottom: 1px solid rgba(255,255,255,.08); white-space: nowrap }
+  table.tbl td { padding: .7rem .8rem; border-bottom: 1px solid rgba(255,255,255,.05); }
+  table.tbl tr:hover td { background: rgba(255,255,255,.03) }
+  /* ---------- Navbar responsif ---------- */
+  #mainnav, #mobnav { display: none; }
+  #nav.in-app #mobnav { display: block; }
+  @media (min-width: 768px) { #nav.in-app #mainnav { display: flex; } #nav.in-app #mobnav { display: none; } }
+  .nav-actions { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .nav-actions::-webkit-scrollbar { display: none; }
+  .nav-actions > * { flex: none; }
+  @media (max-width: 480px) {
+    .iconbtn { width: 2.2rem; height: 2.2rem; border-radius: .7rem; }
+    .theme-switch { width: 3.5rem; height: 2.1rem; }
+    .theme-switch .knob { width: 1.65rem; height: 1.65rem; }
+    .theme-switch.dark .knob { transform: translateX(1.4rem); }
+  }
+  /* ---------- Slider toggle tema ---------- */
+  .theme-switch { position: relative; flex: none; width: 4rem; height: 2.3rem; border-radius: 999px; cursor: pointer; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); transition: background .3s, border-color .3s; }
+  .theme-switch:hover { border-color: rgba(245,185,66,.5); }
+  .theme-switch .ti { position: absolute; top: 50%; transform: translateY(-50%); font-size: .72rem; color: #64748b; transition: opacity .3s; }
+  .theme-switch .ti.sun { left: .6rem } .theme-switch .ti.moon { right: .6rem }
+  .theme-switch .knob { position: absolute; top: 2px; left: 2px; width: 1.85rem; height: 1.85rem; border-radius: 50%; display: grid; place-items: center; font-size: .85rem;
+    background: linear-gradient(135deg, #fde68a, #f59e0b); color: #3b2506; box-shadow: 0 3px 10px rgba(245,158,11,.45); transition: transform .35s cubic-bezier(.3,1.4,.5,1), background .3s, color .3s; }
+  .theme-switch.dark .knob { transform: translateX(1.7rem); background: linear-gradient(135deg, #cbd5e1, #64748b); color: #0b1220; box-shadow: 0 3px 10px rgba(0,0,0,.5); }
+  .theme-switch.dark .ti.moon, .theme-switch:not(.dark) .ti.sun { opacity: 0 }
+  body, .glass, #nav, .input, .opt, .modal-card, .toast, .iconbtn, .btn-ghost { transition: background-color .35s ease, color .35s ease, border-color .35s ease; }
+
+  /* ---------- MODE TERANG ---------- */
+  html.light { color-scheme: light; }
+  html.light body { background: #eef2f7; color: #0f172a; }
+  html.light #bg { background:
+      radial-gradient(900px 500px at 15% -10%, rgba(245,185,66,.28), transparent 60%),
+      radial-gradient(700px 500px at 100% 10%, rgba(56,189,248,.16), transparent 60%),
+      radial-gradient(800px 600px at 50% 120%, rgba(244,63,94,.07), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M48 0H0v48' fill='none' stroke='%230f172a' stroke-opacity='.05'/%3E%3Ccircle cx='0' cy='0' r='1.2' fill='%23d97706' fill-opacity='.35'/%3E%3C/svg%3E"),
+      #eef2f7; }
+  html.light #bg::after { opacity: .55; }
+  html.light #loader { background: #eef2f7; }
+  html.light #nav { background: rgba(255,255,255,.78); border-color: rgba(15,23,42,.08); }
+  html.light .glass { background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.82)); border-color: rgba(15,23,42,.08); box-shadow: 0 18px 40px -22px rgba(15,23,42,.35); }
+  html.light .text-white { color: #0f172a; }
+  html.light .text-slate-100, html.light .text-slate-200 { color: #1e293b; }
+  html.light .text-slate-300 { color: #334155; }
+  html.light .text-slate-400 { color: #475569; }
+  html.light .text-slate-500 { color: #64748b; }
+  html.light .text-amber-300, html.light .text-amber-200 { color: #b45309; }
+  html.light .text-amber-100 { color: #92400e; }
+  html.light .text-sky-300 { color: #0369a1; } html.light .text-sky-100 { color: #0c4a6e; }
+  html.light .text-emerald-300 { color: #047857; } html.light .text-emerald-400 { color: #059669; }
+  html.light .text-rose-300 { color: #be123c; } html.light .text-rose-400 { color: #e11d48; }
+  html.light .text-violet-300 { color: #6d28d9; }
+  html.light .text-amber-400 { color: #d97706; }
+  html.light .paper .text-amber-300, html.light .bg-stone-900.text-amber-300, html.light .bg-stone-800.text-amber-300 { color: #fcd34d; }
+  html.light .paper .text-rose-600 { color: #e11d48; }
+  html.light .bg-ink-950\/50, html.light .bg-ink-950\/60, html.light .bg-ink-950\/70 { background-color: rgba(15,23,42,.05); }
+  html.light .bg-ink-700 { background-color: #e2e8f0; }
+  html.light .bg-ink-800\/80 { background-color: rgba(255,255,255,.85); }
+  html.light .bg-white\/5 { background-color: rgba(15,23,42,.05); }
+  html.light .hover\:bg-white\/10:hover { background-color: rgba(15,23,42,.09); }
+  html.light .border-white\/10, html.light .border-white\/5 { border-color: rgba(15,23,42,.1); }
+  html.light .border-t.border-white\/5 { border-color: rgba(15,23,42,.08); }
+  html.light .text-slate-700 { color: #cbd5e1; }
+  html.light .text-amber-400\/5 { color: rgba(217,119,6,.07); }
+  html.light .input { background: #fff; border-color: #cbd5e1; color: #0f172a; }
+  html.light .input::placeholder { color: #94a3b8; }
+  html.light select { color: #0f172a; }
+  html.light .btn-ghost { background: rgba(15,23,42,.05); border-color: rgba(15,23,42,.12); color: #0f172a; }
+  html.light .btn-ghost:hover:not(:disabled) { background: rgba(15,23,42,.1); }
+  html.light .iconbtn { background: rgba(15,23,42,.05); border-color: rgba(15,23,42,.1); color: #475569; }
+  html.light .iconbtn:hover { background: rgba(245,185,66,.2); color: #b45309; border-color: rgba(217,119,6,.5); }
+  html.light .tabbtn { color: #475569; } html.light .tabbtn.on { background: rgba(245,158,11,.16); color: #92400e; box-shadow: inset 0 0 0 1px rgba(217,119,6,.45); }
+  html.light .theme-switch { background: rgba(15,23,42,.06); border-color: rgba(15,23,42,.14); }
+  html.light .opt { background: #fff; border-color: #cbd5e1; }
+  html.light .opt:hover:not(.locked) { background: #fffbeb; border-color: #f59e0b; }
+  html.light .opt .lt { background: #e2e8f0; color: #334155; }
+  html.light .opt.sel { background: #fffbeb; border-color: #f59e0b; } html.light .opt.sel .lt { background: #f59e0b; color: #1a1205; }
+  html.light .opt.ok { background: #ecfdf5; border-color: #10b981; } html.light .opt.ok .lt { background: #10b981; color: #fff; }
+  html.light .opt.bad { background: #fff1f2; border-color: #f43f5e; } html.light .opt.bad .lt { background: #f43f5e; color: #fff; }
+  html.light .bar { background: rgba(15,23,42,.1); }
+  html.light .star { color: #cbd5e1; } html.light .star.on { color: #f59e0b; }
+  html.light .modal-back { background: rgba(15,23,42,.45); }
+  html.light .modal-card { background: linear-gradient(180deg, #ffffff, #f8fafc); border-color: rgba(15,23,42,.1); box-shadow: 0 30px 80px -20px rgba(15,23,42,.5); }
+  html.light .toast { background: #fff; border-color: rgba(15,23,42,.1); box-shadow: 0 16px 40px -12px rgba(15,23,42,.35); }
+  html.light table.tbl th { color: #475569; border-color: rgba(15,23,42,.1); }
+  html.light table.tbl td { border-color: rgba(15,23,42,.06); }
+  html.light table.tbl tr:hover td { background: rgba(15,23,42,.03); }
+  html.light .scroll-thin::-webkit-scrollbar-thumb { background: #cbd5e1; }
+  html.light .bg-amber-400\/10 { background-color: rgba(245,158,11,.12); }
+  html.light .shadow-lg { --tw-shadow-color: rgba(15,23,42,.2); }
+  html.light .paper { box-shadow: 0 14px 30px -14px rgba(15,23,42,.45), 0 0 0 1px rgba(120,90,40,.15); }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important } }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<!-- Loader -->
+<div id="loader" class="fixed inset-0 z-[100] grid place-items-center bg-ink-950 transition-opacity duration-500">
+  <div class="text-center">
+    <div class="spinner mx-auto"></div>
+    <p class="typewriter mt-5 text-amber-300 tracking-widest text-sm">MEMBUKA BERKAS KASUS…</p>
+  </div>
+</div>
+
+<!-- Navbar -->
+<header id="nav" class="sticky top-0 z-40 border-b border-white/5 bg-ink-900/70 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+    <a href="#" id="brand" class="flex flex-none items-center gap-3">
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-amber-300 to-amber-600 text-ink-950 shadow-lg shadow-amber-500/30"><i class="fa-solid fa-magnifying-glass-chart"></i></span>
+      <span class="hidden leading-tight min-[430px]:block"><span class="typewriter block text-lg tracking-widest text-amber-300">PASAL NOIR</span><span class="hidden text-[11px] text-slate-400 sm:block">Detektif Konstitusi · PKN SMP</span></span>
+    </a>
+    <nav id="mainnav" class="ml-6 items-center gap-1">
+      <button class="tabbtn" data-go="cases"><i class="fa-solid fa-folder-open mr-1.5"></i>Kasus</button>
+      <button class="tabbtn" data-go="board"><i class="fa-solid fa-ranking-star mr-1.5"></i>Peringkat</button>
+      <button class="tabbtn" data-go="guide"><i class="fa-solid fa-book-open mr-1.5"></i>Panduan</button>
+    </nav>
+    <div class="nav-actions ml-auto flex min-w-0 items-center gap-1.5 overflow-x-auto py-1 sm:gap-2">
+      <button id="btnAdmin" class="btn btn-ghost hidden !px-3 !py-2 text-sm" title="Panel Admin"><i class="fa-solid fa-shield-halved text-amber-300"></i><span class="hidden sm:inline">Admin</span></button>
+      <button id="btnTheme" class="theme-switch dark" role="switch" aria-checked="true" aria-label="Mode gelap" title="Mode terang / gelap">
+        <i class="ti sun fa-solid fa-sun"></i><i class="ti moon fa-solid fa-moon"></i>
+        <span class="knob"><i class="fa-solid fa-moon"></i></span>
+      </button>
+      <button id="btnSound" class="iconbtn" title="Suara"><i class="fa-solid fa-volume-high"></i></button>
+      <button id="btnFull" class="iconbtn" title="Layar penuh"><i class="fa-solid fa-expand"></i></button>
+      <button id="btnUser" class="hidden items-center gap-2 rounded-xl border border-white/10 bg-white/5 py-1.5 pl-1.5 pr-3 hover:bg-white/10" title="Profil">
+        <span id="navAvatar" class="grid h-8 w-8 place-items-center rounded-lg bg-ink-700 text-lg">🕵️</span>
+        <span class="hidden text-left text-xs leading-tight sm:block"><b id="navName" class="block max-w-[8rem] truncate text-slate-100">Detektif</b><span id="navRank" class="text-amber-300">Magang</span></span>
+      </button>
+      <button id="btnLogout" class="iconbtn hidden hover:!border-rose-400/50 hover:!bg-rose-500/15 hover:!text-rose-300" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+  </div>
+  <!-- nav mobile -->
+  <div id="mobnav" class="border-t border-white/5">
+    <div class="mx-auto flex max-w-7xl justify-around px-2 py-1.5">
+      <button class="tabbtn" data-go="cases"><i class="fa-solid fa-folder-open"></i> Kasus</button>
+      <button class="tabbtn" data-go="board"><i class="fa-solid fa-ranking-star"></i> Peringkat</button>
+      <button class="tabbtn" data-go="guide"><i class="fa-solid fa-book-open"></i> Panduan</button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="mx-auto max-w-7xl px-4 pb-16">
+
+  <!-- ===================== LANDING ===================== -->
+  <section id="v-landing" class="view-enter">
+    <div class="grid items-center gap-10 py-10 lg:grid-cols-2 lg:py-16">
+      <div>
+        <span class="fade-up inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300"><i class="fa-solid fa-circle text-[6px] animate-pulse"></i> Game Edukasi PKN · Kelas VII–IX</span>
+        <h1 class="fade-up d1 typewriter mt-5 text-5xl leading-[1.05] text-white sm:text-6xl">PASAL <span class="text-amber-300">NOIR</span></h1>
+        <p class="fade-up d2 mt-2 text-xl font-semibold text-slate-300">Pecahkan Kasus, Temukan Pasalnya.</p>
+        <p class="fade-up d3 mt-5 max-w-xl leading-relaxed text-slate-400">Kamu adalah <b class="text-slate-200">Detektif Konstitusi</b>. Di sekolah terjadi pelanggaran hak dan kewajiban warga negara. Kumpulkan bukti, dengarkan saksi, lalu cocokkan temuanmu dengan pasal <b class="text-slate-200">UUD 1945</b> dan nilai <b class="text-slate-200">Pancasila</b> yang tepat. Naikkan pangkatmu dari Detektif Magang sampai Komisaris Agung!</p>
+        <div class="fade-up d4 mt-7 grid max-w-xl gap-3 sm:grid-cols-3">
+          <div class="glass rounded-2xl p-4"><i class="fa-solid fa-fingerprint text-xl text-amber-300"></i><p class="mt-2 text-sm font-bold">Selidiki Bukti</p><p class="text-xs text-slate-400">Saksi, dokumen, rekaman</p></div>
+          <div class="glass rounded-2xl p-4"><i class="fa-solid fa-scale-balanced text-xl text-sky-300"></i><p class="mt-2 text-sm font-bold">Cocokkan Pasal</p><p class="text-xs text-slate-400">UUD 1945 &amp; Pancasila</p></div>
+          <div class="glass rounded-2xl p-4"><i class="fa-solid fa-medal text-xl text-emerald-300"></i><p class="mt-2 text-sm font-bold">Naik Pangkat</p><p class="text-xs text-slate-400">Bintang &amp; peringkat kelas</p></div>
+        </div>
+        <!-- Ilustrasi berkas -->
+        <div class="relative mt-10 hidden h-56 max-w-xl sm:block">
+          <div class="paper typewriter absolute left-2 top-4 w-60 rotate-[-5deg] rounded-md p-4 text-sm float" style="--r:-5deg">
+            <p class="text-[11px] tracking-widest text-stone-500">BERKAS KASUS · K001</p>
+            <p class="mt-1 text-base font-bold">Misteri Mading yang Dirobek</p>
+            <p class="mt-2 text-xs leading-relaxed text-stone-600">Artikel kritik sopan… dirobek. Hak siapa yang dilanggar?</p>
+            <span class="stamp absolute -bottom-3 -right-4 !text-xs text-rose-600" style="border-color:#e11d48;animation-delay:.9s">Rahasia</span>
+          </div>
+          <div class="glass absolute left-64 top-0 rounded-2xl px-4 py-3 float" style="--r:3deg;animation-delay:-1.5s"><p class="text-[11px] text-slate-400">Pasal rujukan</p><p class="font-bold text-amber-300">UUD 1945 · 28E (3)</p></div>
+          <div class="glass absolute left-72 top-24 rounded-2xl px-4 py-3 float" style="--r:-3deg;animation-delay:-3s"><p class="text-[11px] text-slate-400">Nilai Pancasila</p><p class="font-bold text-sky-300">Sila ke-4 · Musyawarah</p></div>
+          <div class="absolute right-0 top-6 grid h-32 w-32 place-items-center rounded-full border-4 border-amber-400/70 bg-ink-800/80 text-5xl text-amber-300 shadow-[0_0_50px_rgba(245,185,66,.35)]" style="animation:glow 3s infinite"><i class="fa-solid fa-magnifying-glass"></i></div>
+        </div>
+      </div>
+
+      <!-- Kartu autentikasi -->
+      <div class="fade-up d2 mx-auto w-full max-w-md">
+        <div class="glass rounded-3xl p-6 sm:p-8">
+          <div class="mb-5 flex rounded-2xl bg-ink-950/60 p-1">
+            <button id="tabLogin" class="tabbtn flex-1 on">Masuk</button>
+            <button id="tabRegister" class="tabbtn flex-1">Daftar</button>
+          </div>
+          <div id="announce" class="mb-4 hidden rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-200"><i class="fa-solid fa-bullhorn mr-1"></i><span></span></div>
+
+          <form id="formLogin" class="space-y-4" autocomplete="on">
+            <div><label class="mb-1.5 block text-xs font-bold text-slate-400">USERNAME</label>
+              <div class="field"><i class="lead fa-solid fa-user"></i><input class="input" name="username" placeholder="mis. rani_8b" autocomplete="username" required></div></div>
+            <div><label class="mb-1.5 block text-xs font-bold text-slate-400">PASSWORD</label>
+              <div class="field"><i class="lead fa-solid fa-lock"></i><input class="input pr-11" type="password" name="password" placeholder="••••••" autocomplete="current-password" required>
+                <button type="button" class="eye absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-300"><i class="fa-solid fa-eye"></i></button></div></div>
+            <button class="btn btn-amber w-full !py-3.5" type="submit"><i class="fa-solid fa-door-open"></i> Masuk ke Markas</button>
+            <p class="text-center text-xs text-slate-500">Belum punya akun? <a href="#" class="font-bold text-amber-300 hover:underline" id="toReg">Daftar jadi detektif</a></p>
+          </form>
+
+          <form id="formRegister" class="hidden space-y-3.5" autocomplete="off">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="col-span-2"><label class="mb-1.5 block text-xs font-bold text-slate-400">NAMA LENGKAP</label>
+                <div class="field"><i class="lead fa-solid fa-id-card"></i><input class="input" name="nama" placeholder="Nama kamu" required maxlength="40"></div></div>
+              <div><label class="mb-1.5 block text-xs font-bold text-slate-400">KELAS</label>
+                <div class="field"><input class="input !pl-3" name="kelas" placeholder="8A" required maxlength="8"></div></div>
+            </div>
+            <div><label class="mb-1.5 block text-xs font-bold text-slate-400">USERNAME</label>
+              <div class="field"><i class="lead fa-solid fa-at"></i><input class="input" name="username" placeholder="huruf kecil, angka, _ ." required maxlength="20"></div></div>
+            <div><label class="mb-1.5 block text-xs font-bold text-slate-400">PASSWORD (min. 6)</label>
+              <div class="field"><i class="lead fa-solid fa-lock"></i><input class="input pr-11" type="password" name="password" placeholder="Buat password" required minlength="6">
+                <button type="button" class="eye absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-300"><i class="fa-solid fa-eye"></i></button></div></div>
+            <div id="codeWrap" class="hidden"><label class="mb-1.5 block text-xs font-bold text-slate-400">KODE KELAS (dari guru)</label>
+              <div class="field"><i class="lead fa-solid fa-key"></i><input class="input" name="kode" placeholder="Masukkan kode"></div></div>
+            <div><label class="mb-1.5 block text-xs font-bold text-slate-400">PILIH AVATAR</label><div id="avatars" class="flex flex-wrap gap-2"></div></div>
+            <button class="btn btn-amber w-full !py-3.5" type="submit"><i class="fa-solid fa-user-plus"></i> Buat Akun Detektif</button>
+          </form>
+        </div>
+        <p class="mt-4 text-center text-xs text-slate-500"><i class="fa-solid fa-shield-halved mr-1"></i>Password disimpan terenkripsi · Skor dihitung server</p>
+      </div>
+    </div>
+
+    <!-- Cara bermain -->
+    <div class="py-10">
+      <h2 class="typewriter text-center text-2xl text-amber-300">CARA BERMAIN</h2>
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" id="howto"></div>
+    </div>
+    <footer class="border-t border-white/5 py-6 text-center text-xs text-slate-500">Pasal Noir · Media pembelajaran PKN SMP · Dibuat dengan Google Apps Script</footer>
+  </section>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <section id="v-dash" class="hidden"><div id="dashBody" class="view-enter pt-6"></div></section>
+
+  <!-- ===================== KASUS ===================== -->
+  <section id="v-case" class="hidden pt-6"></section>
+
+  <!-- ===================== ADMIN ===================== -->
+  <section id="v-admin" class="hidden pt-6"></section>
+</main>
+
+<div id="toasts" class="fixed bottom-4 right-4 z-[95] flex flex-col gap-2"></div>
+<div id="modal-root"></div>
+
+<script>
+/* =====================================================================
+ *  PASAL NOIR — Frontend
+ * ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const AVATARS = ['🕵️', '👩‍🎓', '👨‍🎓', '🦉', '🦊', '🐱', '🦁', '🐼'];
+const TOKEN_KEY = 'pasalnoir_token';
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return sessionStorage.getItem(k) || null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { try { sessionStorage.setItem(k, v); } catch (e2) {} } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} try { sessionStorage.removeItem(k); } catch (e) {} }
+};
+const state = { token: null, user: null, info: {}, dash: null, tab: 'cases', cs: null, soundOn: store.get('pn_sound') !== '0' };
+const COLORS = {
+  amber: { t: 'text-amber-300', bg: 'bg-amber-400/15', br: 'border-amber-400/30', g: 'from-amber-400/20' },
+  sky: { t: 'text-sky-300', bg: 'bg-sky-400/15', br: 'border-sky-400/30', g: 'from-sky-400/20' },
+  emerald: { t: 'text-emerald-300', bg: 'bg-emerald-400/15', br: 'border-emerald-400/30', g: 'from-emerald-400/20' },
+  rose: { t: 'text-rose-300', bg: 'bg-rose-400/15', br: 'border-rose-400/30', g: 'from-rose-400/20' },
+  violet: { t: 'text-violet-300', bg: 'bg-violet-400/15', br: 'border-violet-400/30', g: 'from-violet-400/20' }
+};
+const LEVEL = { Mudah: 'bg-emerald-400/15 text-emerald-300', Sedang: 'bg-amber-400/15 text-amber-300', Sulit: 'bg-rose-400/15 text-rose-300' };
+const CLUEICON = { Saksi: 'fa-comment-dots', Dokumen: 'fa-file-lines', Rekaman: 'fa-video', Bukti: 'fa-magnifying-glass' };
+const fmtTime = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+
+/* ---------- RPC ---------- */
+function rpc(fn, ...args) {
+  return new Promise((resolve, reject) => {
+    if (typeof google === 'undefined' || !google.script) { reject(new Error('Buka game ini lewat URL Web App Google Apps Script.')); return; }
+    google.script.run
+      .withSuccessHandler(r => (r && r.ok) ? resolve(r.data) : reject(new Error((r && r.msg) || 'Terjadi kesalahan.')))
+      .withFailureHandler(e => reject(new Error((e && e.message) || 'Gagal menghubungi server.')))
+      .rpc(fn, [state.token, ...args]);
+  });
+}
+async function api(fn, ...args) {
+  try { return await rpc(fn, ...args); }
+  catch (e) {
+    if (/^Sesi berakhir/.test(e.message) && state.user) { await forceLogout(e.message); throw new Error('__handled'); }
+    throw e;
+  }
+}
+async function run(btn, fn, label) {            // helper tombol: loading state + error toast
+  const html = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ' + (label || 'Memproses…'); }
+  try { return await fn(); }
+  catch (e) { if (e.message !== '__handled') ui.toast(e.message, 'danger'); return undefined; }
+  finally { if (btn && btn.isConnected) { btn.disabled = false; btn.innerHTML = html; } }
+}
+
+/* ---------- Suara (WebAudio) ---------- */
+const sfx = (() => {
+  let ctx;
+  const tone = (f, d, t = 'sine', v = .08, when = 0) => {
+    if (!state.soundOn) return;
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = t; o.frequency.value = f; g.gain.value = v;
+      o.connect(g); g.connect(ctx.destination);
+      const s = ctx.currentTime + when;
+      g.gain.setValueAtTime(v, s); g.gain.exponentialRampToValueAtTime(.0001, s + d);
+      o.start(s); o.stop(s + d);
+    } catch (e) {}
+  };
+  return {
+    click: () => tone(520, .07, 'triangle', .05),
+    ok: () => { tone(660, .15, 'sine', .09); tone(880, .25, 'sine', .09, .12); },
+    bad: () => { tone(220, .25, 'sawtooth', .06); tone(160, .3, 'sawtooth', .06, .15); },
+    win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .3, 'triangle', .08, i * .13)),
+    open: () => { tone(400, .1, 'square', .04); tone(600, .12, 'square', .04, .08); }
+  };
+})();
+
+/* ---------- Dialog & toast kustom ---------- */
+const ui = {
+  icons: { info: ['fa-circle-info', 'text-sky-300 bg-sky-400/15'], success: ['fa-circle-check', 'text-emerald-300 bg-emerald-400/15'], warn: ['fa-triangle-exclamation', 'text-amber-300 bg-amber-400/15'], danger: ['fa-circle-exclamation', 'text-rose-300 bg-rose-400/15'], question: ['fa-circle-question', 'text-amber-300 bg-amber-400/15'] },
+  modal(o) {
+    return new Promise(resolve => {
+      const [ic, cl] = ui.icons[o.type || 'info'];
+      const el = document.createElement('div');
+      el.className = 'modal-back';
+      el.innerHTML = `<div class="modal-card ${o.wide ? 'wide' : ''}" role="dialog" aria-modal="true">
+        ${o.noIcon ? '' : `<div class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl ${cl}"><i class="fa-solid ${o.icon || ic}"></i></div>`}
+        <h3 class="${o.noIcon ? 'text-left' : 'text-center'} text-lg font-extrabold text-white">${esc(o.title || '')}</h3>
+        ${o.html ? `<div class="mt-2 text-sm leading-relaxed text-slate-300">${o.html}</div>` : (o.message ? `<p class="mt-2 text-center text-sm leading-relaxed text-slate-400">${esc(o.message)}</p>` : '')}
+        ${o.input ? `<div class="field mt-4"><i class="lead fa-solid ${o.input.icon || 'fa-key'}"></i><input class="input" id="mInput" type="${o.input.type || 'text'}" placeholder="${esc(o.input.placeholder || '')}"></div>` : ''}
+        <div class="mt-6 flex gap-3 ${o.cancelText === null ? 'justify-center' : ''}">
+          ${o.cancelText === null ? '' : `<button class="btn btn-ghost flex-1" data-r="cancel">${esc(o.cancelText || 'Batal')}</button>`}
+          <button class="btn ${o.type === 'danger' ? 'btn-danger' : 'btn-amber'} flex-1" data-r="ok">${esc(o.confirmText || 'OK')}</button>
+        </div></div>`;
+      document.getElementById('modal-root').appendChild(el);
+      const input = $('#mInput', el);
+      const close = v => { el.style.opacity = 0; el.style.transition = 'opacity .15s'; document.removeEventListener('keydown', onKey); setTimeout(() => el.remove(), 150); resolve(v); };
+      const done = ok => close(ok ? (input ? input.value : true) : (input ? null : false));
+      const onKey = e => { if (e.key === 'Escape') done(false); if (e.key === 'Enter' && input) done(true); };
+      document.addEventListener('keydown', onKey);
+      el.addEventListener('mousedown', e => { if (e.target === el && o.cancelText !== null) done(false); });
+      $$('[data-r]', el).forEach(b => b.onclick = () => { sfx.click(); done(b.dataset.r === 'ok'); });
+      setTimeout(() => (input || $('[data-r=ok]', el)).focus(), 60);
+    });
+  },
+  alert(title, message, type = 'info') { return ui.modal({ title, message, type, cancelText: null, confirmText: 'Mengerti' }); },
+  confirm(title, message, o = {}) { return ui.modal(Object.assign({ title, message, type: 'question', confirmText: 'Ya', cancelText: 'Batal' }, o)); },
+  prompt(title, message, o = {}) { return ui.modal(Object.assign({ title, message, type: 'question', confirmText: 'Simpan', input: {} }, o)); },
+  toast(msg, type = 'info') {
+    const [ic, cl] = ui.icons[type] || ui.icons.info;
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = `<span class="grid h-9 w-9 flex-none place-items-center rounded-xl ${cl}"><i class="fa-solid ${ic}"></i></span><span class="text-sm text-slate-200">${esc(msg)}</span>`;
+    $('#toasts').appendChild(t);
+    setTimeout(() => { t.style.transition = 'all .3s'; t.style.opacity = 0; t.style.transform = 'translateX(20px)'; setTimeout(() => t.remove(), 300); }, 3600);
+  }
+};
+
+function confetti() {
+  const cols = ['#fbbf24', '#34d399', '#38bdf8', '#fb7185', '#a78bfa'];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement('i'); c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % 5];
+    c.style.animationDuration = 2.2 + Math.random() * 2.2 + 's'; c.style.animationDelay = Math.random() * .8 + 's';
+    c.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+    document.body.appendChild(c); setTimeout(() => c.remove(), 5500);
+  }
+}
+
+/* ---------- Navigasi view ---------- */
+function showView(name) {
+  ['landing', 'dash', 'case', 'admin'].forEach(v => $('#v-' + v).classList.toggle('hidden', v !== name));
+  const inApp = name !== 'landing';
+  $('#btnUser').classList.toggle('hidden', !inApp); $('#btnUser').classList.toggle('flex', inApp);
+  $('#btnLogout').classList.toggle('hidden', !inApp);
+  $('#nav').classList.toggle('in-app', inApp);
+  $('#btnAdmin').classList.toggle('hidden', !(inApp && state.user && state.user.role === 'admin'));
+  const el = $('#v-' + name); el.classList.remove('view-enter'); void el.offsetWidth; el.classList.add('view-enter');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  stopTimer();
+}
+
+/* ---------- Tema terang / gelap ---------- */
+function applyTheme(t, save) {
+  const light = t === 'light', sw = $('#btnTheme');
+  document.documentElement.classList.toggle('light', light);
+  sw.classList.toggle('dark', !light);
+  sw.setAttribute('aria-checked', String(!light));
+  sw.setAttribute('aria-label', light ? 'Mode terang aktif' : 'Mode gelap aktif');
+  $('.knob i', sw).className = 'fa-solid ' + (light ? 'fa-sun' : 'fa-moon');
+  if (save) store.set('pn_theme', t);
+}
+applyTheme(store.get('pn_theme') === 'light' ? 'light' : 'dark', false);
+$('#btnTheme').onclick = () => { applyTheme(document.documentElement.classList.contains('light') ? 'dark' : 'light', true); sfx.click(); };
+
+/* ---------- Header global ---------- */
+$('#btnSound').onclick = () => {
+  state.soundOn = !state.soundOn; store.set('pn_sound', state.soundOn ? '1' : '0');
+  $('#btnSound i').className = 'fa-solid ' + (state.soundOn ? 'fa-volume-high' : 'fa-volume-xmark'); sfx.click();
+};
+$('#btnSound i').className = 'fa-solid ' + (state.soundOn ? 'fa-volume-high' : 'fa-volume-xmark');
+$('#btnFull').onclick = async () => {
+  try {
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen();
+  } catch (e) { ui.alert('Layar penuh tidak tersedia', 'Browser memblokir layar penuh di dalam bingkai. Coba buka game lewat URL Web App langsung di tab baru, lalu tekan tombol ini lagi (atau tekan F11).', 'info'); }
+};
+document.addEventListener('fullscreenchange', () => { $('#btnFull i').className = 'fa-solid ' + (document.fullscreenElement ? 'fa-compress' : 'fa-expand'); });
+$('#btnLogout').onclick = async () => {
+  const inCase = !$('#v-case').classList.contains('hidden') && state.cs && !state.cs.done;
+  const ok = await ui.confirm('Keluar dari markas?', inCase ? 'Kamu sedang menyelidiki sebuah kasus. Progres kasus ini akan hilang jika keluar.' : 'Kamu harus masuk lagi untuk melanjutkan penyelidikan.', { type: 'warn', confirmText: 'Ya, Keluar', cancelText: 'Tetap di sini' });
+  if (!ok) return;
+  try { await rpc('logout'); } catch (e) {}
+  doLogout();
+};
+$('#btnAdmin').onclick = () => { sfx.click(); openAdmin('stats'); };
+$('#btnUser').onclick = () => openProfile();
+$('#brand').onclick = e => { e.preventDefault(); if (state.user) goDash('cases'); };
+$$('[data-go]').forEach(b => b.onclick = () => { sfx.click(); goDash(b.dataset.go); });
+
+function doLogout() {
+  store.del(TOKEN_KEY); state.token = null; state.user = null; state.dash = null; state.cs = null;
+  showView('landing'); ui.toast('Kamu sudah keluar. Sampai jumpa, Detektif!', 'info');
+}
+async function forceLogout(msg) {
+  store.del(TOKEN_KEY); state.token = null; state.user = null; state.cs = null; showView('landing');
+  await ui.alert('Sesi berakhir', msg.replace(/^Sesi berakhir\.?\s*/, '') || 'Silakan masuk kembali.', 'warn');
+}
+
+/* =====================================================================
+ *  LANDING / AUTH
+ * ===================================================================== */
+(function initLanding() {
+  $('#howto').innerHTML = [
+    ['fa-folder-open', 'amber', '1. Buka Berkas', 'Baca kisah kasus yang terjadi di lingkungan sekolah atau masyarakat.'],
+    ['fa-magnifying-glass', 'sky', '2. Kumpulkan Bukti', 'Periksa saksi dan dokumen. Beberapa petunjuk “berbayar” memakai poin.'],
+    ['fa-scale-balanced', 'emerald', '3. Cocokkan Pasal', 'Jawab pertanyaan, temukan hak yang dilanggar dan pasal yang tepat.'],
+    ['fa-trophy', 'rose', '4. Tutup Kasus', 'Raih bintang, naikkan pangkat, dan puncaki papan peringkat kelas.']
+  ].map(([i, c, t, d], k) => `<div class="glass fade-up rounded-2xl p-5" style="animation-delay:${k * .08}s"><span class="grid h-11 w-11 place-items-center rounded-xl ${COLORS[c].bg} ${COLORS[c].t}"><i class="fa-solid ${i}"></i></span><h3 class="mt-3 font-bold">${t}</h3><p class="mt-1 text-sm text-slate-400">${d}</p></div>`).join('');
+  $('#avatars').innerHTML = AVATARS.map((a, i) => `<button type="button" data-a="${a}" class="grid h-11 w-11 place-items-center rounded-xl border text-2xl transition ${i === 0 ? 'border-amber-400 bg-amber-400/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}">${a}</button>`).join('');
+  $$('#avatars button').forEach(b => b.onclick = () => {
+    $$('#avatars button').forEach(x => x.className = 'grid h-11 w-11 place-items-center rounded-xl border text-2xl transition border-white/10 bg-white/5 hover:bg-white/10');
+    b.className = 'grid h-11 w-11 place-items-center rounded-xl border text-2xl transition border-amber-400 bg-amber-400/15'; sfx.click();
+  });
+  $$('.eye').forEach(b => b.onclick = () => { const i = b.parentElement.querySelector('input'); i.type = i.type === 'password' ? 'text' : 'password'; b.firstElementChild.className = 'fa-solid ' + (i.type === 'password' ? 'fa-eye' : 'fa-eye-slash'); });
+  const sw = reg => {
+    $('#formLogin').classList.toggle('hidden', reg); $('#formRegister').classList.toggle('hidden', !reg);
+    $('#tabLogin').classList.toggle('on', !reg); $('#tabRegister').classList.toggle('on', reg); sfx.click();
+  };
+  $('#tabLogin').onclick = () => sw(false); $('#tabRegister').onclick = () => sw(true);
+  $('#toReg').onclick = e => { e.preventDefault(); sw(true); };
+
+  $('#formLogin').onsubmit = async e => {
+    e.preventDefault();
+    const f = new FormData(e.target), btn = $('button[type=submit]', e.target);
+    const r = await run(btn, () => rpc('login', { username: f.get('username'), password: f.get('password') }), 'Memeriksa…');
+    if (r) { sfx.ok(); enterApp(r); }
+    else { const c = e.target.closest('.glass'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); sfx.bad(); }
+  };
+  $('#formRegister').onsubmit = async e => {
+    e.preventDefault();
+    const f = new FormData(e.target), btn = $('button[type=submit]', e.target);
+    const av = ($$('#avatars button').find(b => b.className.includes('border-amber-400')) || {}).dataset;
+    const r = await run(btn, () => rpc('register', { nama: f.get('nama'), kelas: f.get('kelas'), username: f.get('username'), password: f.get('password'), kode: f.get('kode'), avatar: av ? av.a : '🕵️' }), 'Mendaftarkan…');
+    if (r) { sfx.win(); await ui.alert('Selamat bergabung!', 'Akun detektifmu sudah jadi. Saatnya menyelidiki kasus pertama.', 'success'); enterApp(r); }
+  };
+})();
+
+async function loadPublic() {
+  try {
+    state.info = await rpc('publicInfo');
+    $('#codeWrap').classList.toggle('hidden', !state.info.needCode);
+    if (state.info.pengumuman) { const a = $('#announce'); a.classList.remove('hidden'); $('span', a).textContent = state.info.pengumuman; }
+  } catch (e) { /* sheet belum disetup / bukan web app */ }
+}
+
+function enterApp(r) {
+  state.token = r.token; state.user = r.user; store.set(TOKEN_KEY, r.token);
+  $('#navAvatar').textContent = r.user.avatar; $('#navName').textContent = r.user.nama.split(' ')[0];
+  goDash('cases');
+}
+
+/* =====================================================================
+ *  DASHBOARD
+ * ===================================================================== */
+async function goDash(tab) {
+  state.tab = tab; showView('dash');
+  $$('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === tab));
+  $('#dashBody').innerHTML = skeleton();
+  try {
+    state.dash = await api('cases');
+    $('#navRank').textContent = state.dash.rank.name;
+    if (tab === 'cases') renderCases();
+    else if (tab === 'board') await renderBoard();
+    else renderGuide();
+  } catch (e) { if (e.message !== '__handled') $('#dashBody').innerHTML = errBox(e.message); }
+}
+const skeleton = () => `<div class="grid gap-4 md:grid-cols-3">${'<div class="h-40 animate-pulse rounded-3xl bg-white/5"></div>'.repeat(3)}</div>`;
+const errBox = m => `<div class="glass mx-auto max-w-lg rounded-3xl p-8 text-center"><i class="fa-solid fa-triangle-exclamation text-3xl text-amber-300"></i><p class="mt-3 font-bold">Terjadi kendala</p><p class="mt-1 text-sm text-slate-400">${esc(m)}</p><button class="btn btn-amber mt-5" onclick="goDash(state.tab)"><i class="fa-solid fa-rotate"></i> Coba lagi</button></div>`;
+
+function renderHero() {
+  const d = state.dash, r = d.rank, u = state.user;
+  const pct = r.next ? Math.min(100, Math.round((d.xp - r.min) / (r.next - r.min) * 100)) : 100;
+  return `<div class="glass fade-up relative overflow-hidden rounded-3xl p-5 sm:p-7">
+    <div class="pointer-events-none absolute -right-10 -top-10 text-[12rem] leading-none text-amber-400/5"><i class="fa-solid ${r.icon}"></i></div>
+    <div class="relative grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+      <div class="flex items-center gap-4">
+        <div class="grid h-20 w-20 flex-none place-items-center rounded-2xl border border-amber-400/30 bg-ink-700 text-4xl shadow-lg">${u.avatar}</div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm text-slate-400">Selamat datang kembali,</p>
+          <h2 class="truncate text-2xl font-extrabold text-white">${esc(u.nama)} <span class="text-sm font-semibold text-slate-500">· ${esc(u.kelas)}</span></h2>
+          <p class="mt-0.5 font-bold text-amber-300"><i class="fa-solid ${r.icon} mr-1.5"></i>${esc(r.name)}</p>
+          <div class="bar mt-3"><i style="width:${pct}%"></i></div>
+          <p class="mt-1.5 text-xs text-slate-400">${d.xp} XP ${r.next ? `· ${r.next - d.xp} XP lagi menuju <b class="text-slate-200">${esc(r.nextName)}</b>` : '· Pangkat tertinggi tercapai! 👑'}</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="rounded-2xl bg-ink-950/50 p-3"><p class="text-2xl font-extrabold text-white">${d.selesai}<span class="text-sm text-slate-500">/${d.cases.length}</span></p><p class="text-[11px] text-slate-400">Kasus selesai</p></div>
+        <div class="rounded-2xl bg-ink-950/50 p-3"><p class="text-2xl font-extrabold text-amber-300"><i class="fa-solid fa-star text-lg"></i> ${d.bintang}</p><p class="text-[11px] text-slate-400">Bintang</p></div>
+        <div class="rounded-2xl bg-ink-950/50 p-3"><p class="text-2xl font-extrabold text-sky-300">${d.posisi ? '#' + d.posisi : '–'}</p><p class="text-[11px] text-slate-400">Peringkat</p></div>
+      </div>
+    </div></div>`;
+}
+
+function renderCases() {
+  const d = state.dash;
+  const ann = state.info.pengumuman ? `<div class="fade-up d1 mt-4 flex items-center gap-3 rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100"><i class="fa-solid fa-bullhorn text-amber-300"></i>${esc(state.info.pengumuman)}</div>` : '';
+  const cardOf = (c, i) => {
+    const col = COLORS[c.warna] || COLORS.amber;
+    const stars = [1, 2, 3].map(n => `<i class="fa-solid fa-star text-sm ${n <= c.bintang ? 'text-amber-400' : 'text-slate-700'}"></i>`).join('');
+    return `<article class="case-card glass fade-up group relative flex flex-col overflow-hidden rounded-3xl" style="animation-delay:${i * .07}s">
+      <div class="bg-gradient-to-b ${col.g} to-transparent p-5 pb-3">
+        <div class="flex items-start justify-between">
+          <span class="grid h-14 w-14 place-items-center rounded-2xl border ${col.br} ${col.bg} text-2xl ${col.t} transition group-hover:scale-110"><i class="fa-solid ${esc(c.ikon)}"></i></span>
+          <span class="typewriter text-xs tracking-widest text-slate-400">BERKAS #${esc(c.id)}</span>
+        </div>
+        <h3 class="mt-4 text-lg font-extrabold leading-snug text-white">${esc(c.judul)}</h3>
+        <p class="mt-1 text-xs text-slate-400"><i class="fa-solid fa-location-dot mr-1"></i>${esc(c.lokasi)}</p>
+      </div>
+      <div class="flex flex-1 flex-col p-5 pt-2">
+        <p class="flex-1 text-sm leading-relaxed text-slate-400">${esc(c.ringkasan)}</p>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
+          <span class="rounded-full px-2.5 py-1 font-bold ${LEVEL[c.level] || LEVEL.Sedang}">${esc(c.level)}</span>
+          <span class="rounded-full bg-white/5 px-2.5 py-1 text-slate-300">${esc(c.kategori)}</span>
+          <span class="rounded-full bg-white/5 px-2.5 py-1 text-slate-300"><i class="fa-solid fa-circle-question mr-1"></i>${c.soal} soal</span>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div><div>${stars}</div><p class="text-[11px] text-slate-500">${c.best !== null ? `Skor terbaik ${c.best}/${c.max}` : 'Belum dicoba'}</p></div>
+          <button class="btn btn-amber !px-4 !py-2.5 text-sm" data-case="${esc(c.id)}"><i class="fa-solid ${c.best !== null ? 'fa-rotate-right' : 'fa-play'}"></i>${c.best !== null ? 'Ulangi' : 'Selidiki'}</button>
+        </div>
+      </div></article>`;
+  };
+  const LV = { Mudah: ['fa-seedling', 'text-emerald-300', 'Cocok untuk pemanasan'], Sedang: ['fa-fire', 'text-amber-300', 'Butuh analisis lebih dalam'], Sulit: ['fa-skull', 'text-rose-300', 'Banyak pasal bekerja bersamaan'] };
+  const order = ['Mudah', 'Sedang', 'Sulit'];
+  const levels = order.filter(l => d.cases.some(c => c.level === l)).concat([...new Set(d.cases.map(c => c.level))].filter(l => !order.includes(l)));
+  let n = 0;
+  const groups = levels.map(l => {
+    const list = d.cases.filter(c => c.level === l), meta = LV[l] || ['fa-folder', 'text-slate-300', ''];
+    const done = list.filter(c => c.best !== null).length;
+    return `<div class="mt-8"><div class="mb-3 flex items-center gap-3"><span class="grid h-9 w-9 place-items-center rounded-xl bg-white/5 ${meta[1]}"><i class="fa-solid ${meta[0]}"></i></span><div class="flex-1"><h3 class="font-extrabold text-white">Level ${esc(l)}</h3><p class="text-xs text-slate-500">${meta[2]}</p></div><span class="text-xs font-bold text-slate-400">${done}/${list.length} selesai</span></div>
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">${list.map(c => cardOf(c, n++)).join('')}</div></div>`;
+  }).join('');
+  $('#dashBody').innerHTML = renderHero() + ann +
+    `<div class="mt-8 flex items-end justify-between"><h2 class="typewriter text-xl tracking-wide text-amber-300">DAFTAR KASUS</h2><span class="text-xs text-slate-500">${d.cases.length} kasus tersedia</span></div>` +
+    (d.cases.length ? groups : `<div class="glass mt-4 rounded-3xl p-10 text-center text-slate-400"><i class="fa-solid fa-box-open text-3xl"></i><p class="mt-3">Belum ada kasus yang dibuka guru.</p></div>`);
+  $$('[data-case]').forEach(b => b.onclick = () => { sfx.open(); startCase(b.dataset.case, b); });
+}
+
+async function renderBoard() {
+  const r = await api('leaderboard');
+  const kelas = [...new Set(r.board.map(x => x.kelas))].sort();
+  const draw = f => {
+    const rows = r.board.filter(x => !f || x.kelas === f);
+    const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span class="text-slate-500">${i + 1}</span>`;
+    $('#boardRows').innerHTML = rows.length ? rows.map((x, i) => `<tr class="${x.id === r.saya ? 'bg-amber-400/10' : ''}">
+      <td class="w-12 text-center text-lg font-bold">${medal(i)}</td>
+      <td><div class="flex items-center gap-3"><span class="grid h-9 w-9 place-items-center rounded-lg bg-ink-700 text-lg">${esc(x.avatar)}</span><div><p class="font-bold text-slate-100">${esc(x.nama)} ${x.id === r.saya ? '<span class="ml-1 rounded bg-amber-400/20 px-1.5 text-[10px] text-amber-300">KAMU</span>' : ''}</p><p class="text-xs text-slate-500">${esc(x.pangkat)}</p></div></div></td>
+      <td class="hidden text-slate-300 sm:table-cell">${esc(x.kelas)}</td>
+      <td class="text-center text-amber-300"><i class="fa-solid fa-star text-xs"></i> ${x.bintang}</td>
+      <td class="text-right font-extrabold text-white">${x.xp} <span class="text-xs font-semibold text-slate-500">XP</span></td></tr>`).join('') : `<tr><td colspan="5" class="py-10 text-center text-slate-500">Belum ada detektif yang menyelesaikan kasus.</td></tr>`;
+  };
+  $('#dashBody').innerHTML = renderHero() + `<div class="glass fade-up d1 mt-8 overflow-hidden rounded-3xl">
+    <div class="flex flex-wrap items-center justify-between gap-3 p-5"><h2 class="typewriter text-xl tracking-wide text-amber-300"><i class="fa-solid fa-ranking-star mr-2"></i>PAPAN PERINGKAT</h2>
+      <select id="fKelas" class="rounded-xl border border-white/10 bg-ink-950/70 px-3 py-2 text-sm text-slate-200 outline-none"><option value="">Semua kelas</option>${kelas.map(k => `<option>${esc(k)}</option>`).join('')}</select></div>
+    <div class="overflow-x-auto scroll-thin"><table class="tbl"><thead><tr><th class="text-center">#</th><th>Detektif</th><th class="hidden sm:table-cell">Kelas</th><th class="text-center">Bintang</th><th class="text-right">Total XP</th></tr></thead><tbody id="boardRows"></tbody></table></div></div>`;
+  draw(''); $('#fKelas').onchange = e => draw(e.target.value);
+}
+
+function renderGuide() {
+  const rk = [['Detektif Magang', 'fa-user-secret', 0], ['Detektif Muda', 'fa-magnifying-glass', 80], ['Detektif Madya', 'fa-fingerprint', 200], ['Inspektur Konstitusi', 'fa-scale-balanced', 350], ['Komisaris Agung', 'fa-crown', 500]];
+  $('#dashBody').innerHTML = renderHero() + `<div class="mt-8 grid gap-5 lg:grid-cols-2">
+    <div class="glass fade-up rounded-3xl p-6"><h3 class="typewriter text-lg text-amber-300">ATURAN MAIN</h3><ul class="mt-4 space-y-3 text-sm text-slate-300">
+      <li><i class="fa-solid fa-folder-open mr-2 text-amber-300"></i>Setiap kasus berisi <b>narasi</b>, <b>bukti</b>, dan beberapa <b>pertanyaan</b>.</li>
+      <li><i class="fa-solid fa-magnifying-glass mr-2 text-sky-300"></i>Bukti bertanda <b>GRATIS</b> bisa langsung dibaca. Bukti <b>terkunci</b> memotong poin saat dibuka.</li>
+      <li><i class="fa-solid fa-scale-balanced mr-2 text-emerald-300"></i>Tiap pertanyaan hanya bisa dijawab <b>sekali</b>. Setelah itu muncul pasal rujukan dan penjelasannya.</li>
+      <li><i class="fa-solid fa-star mr-2 text-amber-300"></i>Bintang: <b>3★</b> ≥ 85% · <b>2★</b> ≥ 60% · <b>1★</b> ≥ 35% dari poin maksimum.</li>
+      <li><i class="fa-solid fa-rotate mr-2 text-rose-300"></i>Kasus boleh diulang. Yang dihitung ke XP adalah <b>skor terbaik</b>.</li></ul></div>
+    <div class="glass fade-up d1 rounded-3xl p-6"><h3 class="typewriter text-lg text-amber-300">JENJANG PANGKAT</h3><div class="mt-4 space-y-2.5">${rk.map(([n, i, m]) => `<div class="flex items-center gap-3 rounded-xl bg-ink-950/50 p-3 ${state.dash.rank.name === n ? 'ring-1 ring-amber-400/60' : ''}"><span class="grid h-10 w-10 place-items-center rounded-lg bg-amber-400/15 text-amber-300"><i class="fa-solid ${i}"></i></span><b class="flex-1 text-sm">${n}</b><span class="text-xs text-slate-400">${m} XP</span></div>`).join('')}</div></div></div>`;
+}
+
+async function openProfile() {
+  sfx.click();
+  let p;
+  try { p = await api('profile'); } catch (e) { if (e.message !== '__handled') ui.toast(e.message, 'danger'); return; }
+  const rows = p.riwayat.length ? p.riwayat.map(r => `<div class="flex items-center justify-between rounded-xl bg-ink-950/50 px-3 py-2.5"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-100">${esc(r.kasus)}</p><p class="text-[11px] text-slate-500">${esc(r.waktu)}</p></div><div class="text-right"><p class="font-bold text-white">${r.skor}<span class="text-xs text-slate-500">/${r.max}</span></p><p class="text-xs text-amber-400">${'★'.repeat(r.bintang)}${'☆'.repeat(3 - r.bintang)}</p></div></div>`).join('') : '<p class="py-4 text-center text-sm text-slate-500">Belum ada riwayat penyelidikan.</p>';
+  const html = `<div class="text-left"><div class="flex items-center gap-4"><span class="grid h-16 w-16 place-items-center rounded-2xl bg-ink-700 text-3xl">${esc(p.user.avatar)}</span><div><p class="text-lg font-extrabold text-white">${esc(p.user.nama)}</p><p class="text-sm text-slate-400">@${esc(p.user.username)} · ${esc(p.user.kelas)}</p><p class="mt-0.5 text-sm font-bold text-amber-300"><i class="fa-solid ${p.rank.icon} mr-1"></i>${esc(p.rank.name)} · ${p.xp} XP</p></div></div>
+    <h4 class="mb-2 mt-5 text-xs font-bold tracking-widest text-slate-400">RIWAYAT TERAKHIR</h4><div class="max-h-56 space-y-2 overflow-auto scroll-thin">${rows}</div></div>`;
+  const r = await ui.modal({ title: 'Profil Detektif', html, noIcon: true, wide: true, confirmText: 'Ganti Password', cancelText: 'Tutup', type: 'info' });
+  if (r) changePassword();
+}
+async function changePassword() {
+  const oldPw = await ui.prompt('Password lama', 'Masukkan password yang sekarang kamu pakai.', { input: { type: 'password', placeholder: 'Password lama', icon: 'fa-lock' }, confirmText: 'Lanjut' });
+  if (!oldPw) return;
+  const newPw = await ui.prompt('Password baru', 'Minimal 6 karakter.', { input: { type: 'password', placeholder: 'Password baru', icon: 'fa-key' } });
+  if (!newPw) return;
+  const ok = await run(null, () => api('changePassword', oldPw, newPw));
+  if (ok) ui.alert('Berhasil', 'Password kamu sudah diganti.', 'success');
+}
+
+/* =====================================================================
+ *  MODE KASUS
+ * ===================================================================== */
+let timerInt = null;
+function stopTimer() { if (timerInt) { clearInterval(timerInt); timerInt = null; } }
+
+async function startCase(id, btn) {
+  const data = await run(btn, () => api('startCase', id), 'Membuka…');
+  if (!data) return;
+  state.cs = { data, idx: 0, fb: {}, cost: 0, sel: null, t0: Date.now(), done: false, open: {} };
+  data.petunjuk.forEach(p => { if (p.isi !== null) state.cs.open[p.id] = p.isi; });
+  showView('case'); renderBriefing();
+}
+
+function caseHeader(extra = '') {
+  const k = state.cs.data.kasus, col = COLORS[k.warna] || COLORS.amber;
+  return `<div class="mb-5 flex flex-wrap items-center gap-3"><button class="btn btn-ghost !px-3 !py-2 text-sm" id="btnBack"><i class="fa-solid fa-arrow-left"></i> Daftar Kasus</button>
+    <span class="typewriter text-xs tracking-widest text-slate-400">BERKAS #${esc(k.id)}</span><span class="rounded-full px-2.5 py-1 text-xs font-bold ${LEVEL[k.level] || LEVEL.Sedang}">${esc(k.level)}</span>${extra}</div>`;
+}
+function bindBack() {
+  $('#btnBack').onclick = async () => {
+    if (!state.cs.done) { const ok = await ui.confirm('Tinggalkan penyelidikan?', 'Progres kasus ini tidak akan tersimpan.', { type: 'warn', confirmText: 'Ya, tinggalkan', cancelText: 'Lanjutkan' }); if (!ok) return; }
+    state.cs = null; goDash('cases');
+  };
+}
+
+function renderBriefing() {
+  const k = state.cs.data.kasus, col = COLORS[k.warna] || COLORS.amber, d = state.cs.data;
+  $('#v-case').innerHTML = `<div class="view-enter">${caseHeader()}
+    <div class="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div class="paper typewriter rounded-md p-6 sm:p-9">
+        <div class="flex items-start justify-between gap-3"><div><p class="text-xs tracking-[.25em] text-stone-500">LAPORAN KEJADIAN</p><h2 class="mt-1 text-2xl font-bold leading-tight sm:text-3xl">${esc(k.judul)}</h2><p class="mt-1 text-sm text-stone-600"><i class="fa-solid fa-location-dot mr-1"></i>${esc(k.lokasi)}</p></div>
+          <span class="stamp hidden !text-sm text-rose-600 sm:inline-block" style="border-color:#e11d48;animation-delay:.5s">Baru</span></div>
+        <hr class="my-4 border-stone-400/50"><p class="whitespace-pre-line leading-[1.9] text-stone-800">${esc(k.narasi)}</p>
+        ${k.tujuan ? `<div class="mt-6 rounded border border-dashed border-stone-500/60 p-3 text-sm text-stone-700"><b>Misi belajar:</b> ${esc(k.tujuan)}</div>` : ''}
+      </div>
+      <div class="space-y-5">
+        <div class="glass rounded-3xl p-5"><h3 class="typewriter text-amber-300">TOKOH TERKAIT</h3><div class="mt-3 space-y-2">${k.tokoh.map((t, i) => { const [n, r] = t.split('–').map(s => s.trim()); return `<div class="flex items-center gap-3 rounded-xl bg-ink-950/50 p-3"><span class="grid h-10 w-10 place-items-center rounded-full ${COLORS[['amber', 'sky', 'emerald', 'rose'][i % 4]].bg} font-extrabold ${COLORS[['amber', 'sky', 'emerald', 'rose'][i % 4]].t}">${esc(n[0])}</span><div><p class="text-sm font-bold text-slate-100">${esc(n)}</p><p class="text-xs text-slate-400">${esc(r || '')}</p></div></div>`; }).join('')}</div></div>
+        <div class="glass rounded-3xl p-5 text-sm text-slate-300"><h3 class="typewriter text-amber-300">RINGKASAN TUGAS</h3><ul class="mt-3 space-y-2"><li><i class="fa-solid fa-magnifying-glass mr-2 text-sky-300"></i>${d.petunjuk.length} bukti (${d.petunjuk.filter(p => p.biaya === 0).length} gratis)</li><li><i class="fa-solid fa-circle-question mr-2 text-emerald-300"></i>${d.soal.length} pertanyaan · maks ${d.soal.reduce((a, q) => a + q.poin, 0)} poin</li></ul></div>
+        <button id="btnGo" class="btn btn-amber w-full !py-4 text-base" style="animation:glow 2.4s infinite"><i class="fa-solid fa-user-secret"></i> Mulai Penyelidikan</button>
+      </div></div></div>`;
+  bindBack(); $('#btnGo').onclick = () => { sfx.open(); state.cs.t0 = Date.now(); renderBoardPlay(); };
+}
+
+function liveScore() {
+  const cs = state.cs; let s = 0, max = 0;
+  cs.data.soal.forEach(q => { max += q.poin; const f = cs.fb[q.id]; if (f) s += f.poin; });
+  return { score: Math.max(0, s - cs.cost), max };
+}
+
+function renderBoardPlay() {
+  const cs = state.cs, k = cs.data.kasus, total = cs.data.soal.length, answered = Object.keys(cs.fb).length;
+  const ls = liveScore();
+  $('#v-case').innerHTML = `<div>${caseHeader(`<span class="ml-auto flex items-center gap-2 text-sm"><span class="rounded-xl bg-white/5 px-3 py-1.5"><i class="fa-regular fa-clock mr-1 text-sky-300"></i><b id="tmr">00:00</b></span><span class="rounded-xl bg-amber-400/10 px-3 py-1.5 text-amber-200"><i class="fa-solid fa-coins mr-1"></i><b id="liveScore">${ls.score}</b>/${ls.max}</span></span>`)}
+    <div class="mb-5"><div class="mb-1.5 flex justify-between text-xs text-slate-400"><span class="font-bold text-slate-200">${esc(k.judul)}</span><span>Pertanyaan ${Math.min(cs.idx + 1, total)} dari ${total}</span></div><div class="bar"><i id="prog" style="width:${answered / total * 100}%"></i></div></div>
+    <div class="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
+      <div><div class="mb-3 flex items-center justify-between"><h3 class="typewriter text-lg text-amber-300"><i class="fa-solid fa-thumbtack mr-2"></i>PAPAN BUKTI</h3><button class="text-xs font-bold text-slate-400 hover:text-amber-300" id="btnBrief"><i class="fa-solid fa-file-lines mr-1"></i>Baca laporan</button></div><div id="clues" class="space-y-4"></div></div>
+      <div id="qpanel"></div></div></div>`;
+  bindBack(); drawClues(); drawQuestion();
+  $('#btnBrief').onclick = () => ui.modal({ title: k.judul, html: `<p class="max-h-72 overflow-auto whitespace-pre-line text-left leading-relaxed scroll-thin">${esc(k.narasi)}</p>`, noIcon: true, wide: true, cancelText: null, confirmText: 'Tutup' });
+  stopTimer(); const tick = () => { const el = $('#tmr'); if (el) el.textContent = fmtTime(Math.round((Date.now() - cs.t0) / 1000)); };
+  tick(); timerInt = setInterval(tick, 1000);
+}
+
+function drawClues() {
+  const cs = state.cs;
+  $('#clues').innerHTML = cs.data.petunjuk.map((p, i) => {
+    const opened = cs.open[p.id] !== undefined;
+    const rot = ['-.6deg', '.5deg', '-.3deg', '.7deg'][i % 4];
+    return `<div class="clue paper typewriter rounded-md p-4 pt-5" style="transform:rotate(${rot})">
+      <div class="flex items-start gap-3"><span class="grid h-9 w-9 flex-none place-items-center rounded-lg bg-stone-800 text-amber-300"><i class="fa-solid ${CLUEICON[p.jenis] || 'fa-magnifying-glass'}"></i></span>
+        <div class="min-w-0 flex-1"><p class="text-[10px] tracking-widest text-stone-500">${esc(p.jenis.toUpperCase())} · ${p.biaya === 0 ? 'GRATIS' : '−' + p.biaya + ' POIN'}</p><p class="font-bold leading-snug">${esc(p.judul)}</p></div></div>
+      ${opened ? `<p class="mt-3 text-sm leading-relaxed text-stone-800">${esc(cs.open[p.id])}</p>` :
+        `<div class="relative mt-3"><p class="blur-lock text-sm leading-relaxed text-stone-700">Isi petunjuk ini masih disegel. Buka untuk membaca keterangan lengkapnya dan temukan fakta penting.</p>
+         <div class="absolute inset-0 grid place-items-center"><button class="btn !px-4 !py-2 text-sm bg-stone-900 text-amber-300 hover:bg-stone-800" data-clue="${esc(p.id)}"><i class="fa-solid fa-lock-open"></i> Buka (−${p.biaya} poin)</button></div></div>`}</div>`;
+  }).join('') || '<p class="text-sm text-slate-500">Kasus ini tidak memiliki petunjuk tambahan.</p>';
+  $$('[data-clue]').forEach(b => b.onclick = async () => {
+    const p = cs.data.petunjuk.find(x => x.id === b.dataset.clue);
+    const ok = await ui.confirm('Buka petunjuk berbayar?', `“${p.judul}” akan memotong ${p.biaya} poin dari skor akhirmu.`, { type: 'warn', confirmText: 'Buka', cancelText: 'Jangan dulu', icon: 'fa-coins' });
+    if (!ok) return;
+    const r = await run(b, () => api('openClue', cs.data.kasus.id, p.id));
+    if (r) { cs.open[p.id] = r.isi; cs.cost += r.biaya; sfx.open(); drawClues(); $('#liveScore').textContent = liveScore().score; }
+  });
+}
+
+function drawQuestion() {
+  const cs = state.cs, q = cs.data.soal[cs.idx], fb = cs.fb[q.id], total = cs.data.soal.length;
+  const opts = Object.entries(q.opsi).map(([L, t]) => {
+    let cls = 'opt';
+    if (fb) { cls += ' locked'; if (L === fb.kunci) cls += ' ok'; else if (L === fb.pilihan) cls += ' bad'; }
+    else if (cs.sel === L) cls += ' sel';
+    return `<button class="${cls}" data-o="${L}" ${fb ? 'disabled' : ''}><span class="lt">${L}</span><span class="pt-0.5 text-sm leading-relaxed text-slate-100">${esc(t)}</span>${fb && L === fb.kunci ? '<i class="fa-solid fa-circle-check ml-auto mt-1 text-emerald-300"></i>' : fb && L === fb.pilihan ? '<i class="fa-solid fa-circle-xmark ml-auto mt-1 text-rose-300"></i>' : ''}</button>`;
+  }).join('');
+  const feedback = fb ? `<div class="mt-5 view-enter">
+      <div class="mb-3 flex items-center gap-3"><span class="stamp text-lg ${fb.benar ? 'text-emerald-400' : 'text-rose-400'}" style="border-color:currentColor">${fb.benar ? 'Terbukti' : 'Keliru'}</span><span class="text-sm font-bold ${fb.benar ? 'text-emerald-300' : 'text-rose-300'}">${fb.benar ? '+' + fb.poin + ' poin' : 'Tidak ada poin'}</span></div>
+      <div class="paper typewriter rounded-md p-4"><p class="text-[10px] tracking-widest text-stone-500">PASAL RUJUKAN</p><p class="mt-0.5 text-lg font-bold">${esc(fb.pasal)}</p>${fb.bunyi ? `<blockquote class="mt-2 border-l-4 border-amber-600 pl-3 text-sm italic text-stone-700">“${esc(fb.bunyi)}”</blockquote>` : ''}${fb.penjelasan ? `<p class="mt-3 text-sm leading-relaxed text-stone-800"><b>Analisis:</b> ${esc(fb.penjelasan)}</p>` : ''}</div>
+      <button id="btnNext" class="btn btn-amber mt-4 w-full !py-3.5">${cs.idx + 1 < total ? 'Pertanyaan Berikutnya <i class="fa-solid fa-arrow-right"></i>' : '<i class="fa-solid fa-stamp"></i> Tutup Kasus'}</button></div>`
+    : `<button id="btnCheck" class="btn btn-amber mt-5 w-full !py-3.5" ${cs.sel ? '' : 'disabled'}><i class="fa-solid fa-gavel"></i> Ajukan Jawaban</button>`;
+  $('#qpanel').innerHTML = `<div class="glass view-enter rounded-3xl p-5 sm:p-6"><div class="mb-1 flex items-center gap-2 text-xs font-bold text-amber-300"><i class="fa-solid fa-circle-question"></i> PERTANYAAN ${cs.idx + 1}/${total} · ${q.poin} POIN</div>
+    <h3 class="text-lg font-extrabold leading-snug text-white">${esc(q.teks)}</h3><div class="mt-4 space-y-2.5" id="opts">${opts}</div>${feedback}</div>`;
+  $('#prog').style.width = (Object.keys(cs.fb).length / total * 100) + '%';
+  if (!fb) {
+    $$('#opts .opt').forEach(b => b.onclick = () => { cs.sel = b.dataset.o; sfx.click(); drawQuestion(); });
+    const c = $('#btnCheck'); if (c) c.onclick = async () => {
+      const r = await run(c, () => api('answer', cs.data.kasus.id, q.id, cs.sel), 'Memeriksa…');
+      if (!r) return; cs.fb[q.id] = r; cs.sel = null; r.benar ? sfx.ok() : sfx.bad(); drawQuestion(); $('#liveScore').textContent = liveScore().score;
+    };
+  } else {
+    $('#btnNext').onclick = async () => {
+      sfx.click();
+      if (cs.idx + 1 < total) { cs.idx++; cs.sel = null; drawQuestion(); $('#qpanel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      else { const res = await run($('#btnNext'), () => api('finish', cs.data.kasus.id), 'Menutup kasus…'); if (res) { cs.done = true; stopTimer(); renderResult(res); } }
+    };
+  }
+}
+
+function renderResult(r) {
+  const cs = state.cs, k = cs.data.kasus, pct = r.max ? Math.round(r.skor / r.max * 100) : 0;
+  const msg = r.bintang === 3 ? 'Luar biasa! Kamu detektif sejati.' : r.bintang === 2 ? 'Penyelidikan yang bagus!' : r.bintang === 1 ? 'Lumayan! Pelajari lagi pasalnya, lalu coba ulang.' : 'Kasus belum terpecahkan. Baca ulang bukti dan coba lagi!';
+  $('#v-case').innerHTML = `<div class="view-enter mx-auto max-w-3xl">
+    <div class="glass relative overflow-hidden rounded-3xl p-6 text-center sm:p-9">
+      <p class="typewriter text-xs tracking-[.3em] text-slate-400">${esc(k.judul).toUpperCase()}</p>
+      <div class="my-5"><span class="stamp text-3xl sm:text-4xl ${r.bintang >= 1 ? 'text-emerald-400' : 'text-rose-400'}" style="border-color:currentColor">${r.bintang >= 1 ? 'Kasus Ditutup' : 'Belum Tuntas'}</span></div>
+      <div class="my-4 flex justify-center gap-3 text-5xl" id="stars">${[1, 2, 3].map(n => `<i class="fa-solid fa-star star"></i>`).join('')}</div>
+      <p class="text-slate-300">${msg}</p>
+      <div class="mx-auto mt-6 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-2xl bg-ink-950/60 p-3"><p class="text-2xl font-extrabold text-amber-300" id="cnt">0</p><p class="text-[11px] text-slate-400">Skor / ${r.max}</p></div>
+        <div class="rounded-2xl bg-ink-950/60 p-3"><p class="text-2xl font-extrabold text-emerald-300">${r.benar}/${r.total}</p><p class="text-[11px] text-slate-400">Jawaban benar</p></div>
+        <div class="rounded-2xl bg-ink-950/60 p-3"><p class="text-2xl font-extrabold text-rose-300">−${r.biayaPetunjuk}</p><p class="text-[11px] text-slate-400">Biaya petunjuk</p></div>
+        <div class="rounded-2xl bg-ink-950/60 p-3"><p class="text-2xl font-extrabold text-sky-300">${fmtTime(r.durasi)}</p><p class="text-[11px] text-slate-400">Waktu</p></div></div>
+      ${r.rekorBaru ? '<p class="mt-4 text-sm font-bold text-amber-300"><i class="fa-solid fa-bolt mr-1"></i>Rekor pribadi baru!</p>' : ''}
+      <div class="mx-auto mt-5 max-w-md rounded-2xl bg-ink-950/60 p-4 text-left"><div class="flex items-center justify-between text-sm"><b class="text-amber-300"><i class="fa-solid ${r.rank.icon} mr-1.5"></i>${esc(r.rank.name)}</b><span class="text-slate-400">${r.xpAfter} XP</span></div>
+        <div class="bar mt-2"><i id="xpbar" style="width:0"></i></div>${r.naikPangkat ? '<p class="mt-2 text-xs font-bold text-emerald-300"><i class="fa-solid fa-arrow-up mr-1"></i>Selamat! Kamu naik pangkat!</p>' : ''}</div>
+    </div>
+    <div class="glass mt-5 rounded-3xl p-5 sm:p-6"><h3 class="typewriter text-lg text-amber-300">BERKAS RINGKASAN PASAL</h3><div class="mt-3 space-y-2">${r.review.map((x, i) => `<div class="flex items-start gap-3 rounded-xl bg-ink-950/50 p-3"><span class="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-full text-xs ${x.benar ? 'bg-emerald-400/20 text-emerald-300' : 'bg-rose-400/20 text-rose-300'}"><i class="fa-solid ${x.benar ? 'fa-check' : 'fa-xmark'}"></i></span><div class="min-w-0"><p class="text-sm text-slate-200">${esc(x.teks)}</p><p class="mt-0.5 text-xs font-bold text-amber-300">${esc(x.pasal)}</p></div></div>`).join('')}</div></div>
+    <div class="mt-5 flex flex-col gap-3 sm:flex-row"><button class="btn btn-ghost flex-1" id="rAgain"><i class="fa-solid fa-rotate-right"></i> Ulangi Kasus</button><button class="btn btn-amber flex-1" id="rBack"><i class="fa-solid fa-folder-open"></i> Kasus Lainnya</button></div></div>`;
+  $('#rBack').onclick = () => { state.cs = null; goDash('cases'); };
+  $('#rAgain').onclick = () => startCase(k.id, $('#rAgain'));
+  $$('#stars .star').forEach((s, i) => { if (i < r.bintang) setTimeout(() => { s.classList.add('on'); sfx.ok(); }, 500 + i * 450); });
+  const rk = r.rank, pctXp = rk.next ? Math.min(100, Math.round((r.xpAfter - rk.min) / (rk.next - rk.min) * 100)) : 100;
+  setTimeout(() => $('#xpbar').style.width = pctXp + '%', 300);
+  let n = 0; const cn = $('#cnt'), step = Math.max(1, Math.ceil(r.skor / 30)); const iv = setInterval(() => { n = Math.min(r.skor, n + step); cn.textContent = n; if (n >= r.skor) clearInterval(iv); }, 30);
+  if (r.bintang >= 2) { setTimeout(() => { confetti(); sfx.win(); }, 600); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* =====================================================================
+ *  ADMIN
+ * ===================================================================== */
+async function openAdmin(tab) {
+  showView('admin'); state.admTab = tab;
+  const tabs = [['stats', 'fa-chart-pie', 'Ringkasan'], ['users', 'fa-users', 'Siswa'], ['cases', 'fa-folder-tree', 'Kasus'], ['results', 'fa-clipboard-list', 'Hasil'], ['settings', 'fa-gear', 'Pengaturan']];
+  $('#v-admin').innerHTML = `<div class="view-enter"><div class="mb-5 flex flex-wrap items-center gap-3"><button class="btn btn-ghost !px-3 !py-2 text-sm" id="admBack"><i class="fa-solid fa-arrow-left"></i> Kembali</button><h2 class="typewriter text-2xl text-amber-300"><i class="fa-solid fa-shield-halved mr-2"></i>PANEL ADMIN</h2></div>
+    <div class="mb-5 flex gap-1 overflow-x-auto rounded-2xl bg-ink-950/50 p-1 scroll-thin">${tabs.map(([k, i, n]) => `<button class="tabbtn whitespace-nowrap ${k === tab ? 'on' : ''}" data-adm="${k}"><i class="fa-solid ${i} mr-1.5"></i>${n}</button>`).join('')}</div>
+    <div id="admBody">${skeleton()}</div></div>`;
+  $('#admBack').onclick = () => goDash('cases');
+  $$('[data-adm]').forEach(b => b.onclick = () => { sfx.click(); openAdmin(b.dataset.adm); });
+  const body = $('#admBody');
+  try {
+    if (tab === 'stats') {
+      const s = await api('adminStats');
+      const card = (i, c, v, l) => `<div class="glass rounded-2xl p-5"><span class="grid h-10 w-10 place-items-center rounded-xl ${COLORS[c].bg} ${COLORS[c].t}"><i class="fa-solid ${i}"></i></span><p class="mt-3 text-3xl font-extrabold text-white">${v}</p><p class="text-xs text-slate-400">${l}</p></div>`;
+      body.innerHTML = `<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">${card('fa-users', 'sky', s.siswa, 'Siswa terdaftar')}${card('fa-folder-open', 'amber', s.kasusAktif + '/' + s.kasusTotal, 'Kasus aktif')}${card('fa-flag-checkered', 'emerald', s.percobaan, 'Kasus diselesaikan')}${card('fa-percent', 'rose', s.rata + '%', 'Rata-rata skor')}</div>
+        <div class="glass mt-5 rounded-3xl p-5"><h3 class="typewriter text-lg text-amber-300">SOAL PALING SERING SALAH</h3><p class="text-xs text-slate-500">Gunakan untuk menentukan materi yang perlu diulas di kelas.</p><div class="mt-4 space-y-3">${s.tersulit.length ? s.tersulit.map(t => `<div class="rounded-xl bg-ink-950/50 p-3"><div class="flex items-center justify-between gap-3"><p class="text-sm text-slate-200">${esc(t.teks)}</p><b class="flex-none text-rose-300">${t.salah}% salah</b></div><div class="bar mt-2"><i style="width:${t.salah}%;background:linear-gradient(90deg,#fb7185,#e11d48)"></i></div><p class="mt-1 text-[11px] text-slate-500">${esc(t.kasus)} · ${t.n} jawaban</p></div>`).join('') : '<p class="text-sm text-slate-500">Belum ada data.</p>'}</div></div>`;
+    } else if (tab === 'users') {
+      const u = await api('adminUsers');
+      body.innerHTML = `<div class="glass overflow-hidden rounded-3xl"><div class="flex items-center justify-between p-4"><input id="uq" class="input !pl-4 max-w-xs" placeholder="Cari nama / kelas / username…"><span class="text-xs text-slate-500">${u.length} akun</span></div><div class="overflow-x-auto scroll-thin"><table class="tbl"><thead><tr><th>Nama</th><th>Kelas</th><th>Username</th><th>XP</th><th>Main</th><th>Login terakhir</th><th>Status</th><th></th></tr></thead><tbody id="ub"></tbody></table></div></div>`;
+      const draw = q => {
+        $('#ub').innerHTML = u.filter(x => !q || (x.nama + x.kelas + x.username).toLowerCase().includes(q.toLowerCase())).map(x => `<tr><td><span class="mr-2">${esc(x.avatar)}</span><b>${esc(x.nama)}</b> ${x.role === 'admin' ? '<span class="rounded bg-amber-400/20 px-1.5 text-[10px] text-amber-300">ADMIN</span>' : ''}</td><td>${esc(x.kelas)}</td><td class="text-slate-400">@${esc(x.username)}</td><td class="font-bold text-amber-300">${x.xp}</td><td>${x.percobaan}</td><td class="text-xs text-slate-500">${esc(x.login) || '–'}</td>
+          <td><span class="rounded-full px-2 py-0.5 text-xs font-bold ${x.status === 'Aktif' ? 'bg-emerald-400/15 text-emerald-300' : 'bg-rose-400/15 text-rose-300'}">${esc(x.status)}</span></td>
+          <td class="whitespace-nowrap text-right"><button class="iconbtn !h-8 !w-8 inline-grid" title="Reset password" data-act="reset" data-id="${esc(x.id)}" data-n="${esc(x.nama)}"><i class="fa-solid fa-key text-xs"></i></button> <button class="iconbtn !h-8 !w-8 inline-grid" title="Aktif/Nonaktif" data-act="toggle" data-id="${esc(x.id)}" data-n="${esc(x.nama)}"><i class="fa-solid fa-user-slash text-xs"></i></button> <button class="iconbtn !h-8 !w-8 inline-grid hover:!text-rose-300" title="Hapus" data-act="del" data-id="${esc(x.id)}" data-n="${esc(x.nama)}"><i class="fa-solid fa-trash text-xs"></i></button></td></tr>`).join('');
+        $$('[data-act]').forEach(b => b.onclick = () => userAct(b.dataset.act, b.dataset.id, b.dataset.n));
+      };
+      draw(''); $('#uq').oninput = e => draw(e.target.value);
+    } else if (tab === 'cases') {
+      const c = await api('adminCases');
+      body.innerHTML = `<div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4 text-sm text-sky-100"><span><i class="fa-solid fa-table mr-2"></i>Kasus, petunjuk, dan soal dikelola langsung di Google Sheet (sheet <b>Kasus</b>, <b>Petunjuk</b>, <b>Pertanyaan</b>).</span><a class="btn btn-ghost !py-2 text-sm" target="_blank" rel="noopener" href="${esc(c.url)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Spreadsheet</a></div>
+        <div class="glass overflow-x-auto rounded-3xl scroll-thin"><table class="tbl"><thead><tr><th>ID</th><th>Judul</th><th>Level</th><th>Soal</th><th>Petunjuk</th><th>Dimainkan</th><th>Rata-rata</th><th>Status</th></tr></thead><tbody>${c.kasus.map(k => `<tr><td class="typewriter text-slate-400">${esc(k.id)}</td><td class="font-bold">${esc(k.judul)}</td><td>${esc(k.level)}</td><td>${k.soal}</td><td>${k.petunjuk}</td><td>${k.main}</td><td>${k.rata}%</td><td><button class="rounded-full px-3 py-1 text-xs font-bold ${k.status === 'Aktif' ? 'bg-emerald-400/15 text-emerald-300' : 'bg-slate-500/20 text-slate-300'}" data-cs="${esc(k.id)}" data-st="${esc(k.status)}">${esc(k.status)} <i class="fa-solid fa-repeat ml-1 text-[10px]"></i></button></td></tr>`).join('')}</tbody></table></div>`;
+      $$('[data-cs]').forEach(b => b.onclick = async () => {
+        const to = b.dataset.st === 'Aktif' ? 'Draft' : 'Aktif';
+        const ok = await ui.confirm(to === 'Draft' ? 'Sembunyikan kasus?' : 'Aktifkan kasus?', to === 'Draft' ? 'Kasus tidak akan terlihat oleh siswa.' : 'Kasus akan tampil di daftar siswa.', { type: 'question', confirmText: 'Ya' });
+        if (ok && await run(null, () => api('adminSetCaseStatus', b.dataset.cs, to))) { ui.toast('Status diperbarui', 'success'); openAdmin('cases'); }
+      });
+    } else if (tab === 'results') {
+      const r = await api('adminResults');
+      body.innerHTML = `<div class="glass overflow-hidden rounded-3xl"><div class="flex items-center justify-between p-4"><span class="text-xs text-slate-500">300 hasil terbaru</span><button class="btn btn-ghost !py-2 text-sm" id="csv"><i class="fa-solid fa-file-csv"></i> Unduh CSV</button></div><div class="overflow-x-auto scroll-thin"><table class="tbl"><thead><tr><th>Waktu</th><th>Nama</th><th>Kelas</th><th>Kasus</th><th>Skor</th><th>Benar</th><th>Petunjuk</th><th>Durasi</th><th>★</th></tr></thead><tbody>${r.map(x => `<tr><td class="text-xs text-slate-500">${esc(x.waktu)}</td><td class="font-bold">${esc(x.nama)}</td><td>${esc(x.kelas)}</td><td>${esc(x.kasus)}</td><td class="font-bold text-amber-300">${x.skor}/${x.max}</td><td>${x.benar}/${x.total}</td><td>${x.petunjuk}</td><td>${fmtTime(x.durasi)}</td><td class="text-amber-400">${'★'.repeat(x.bintang)}</td></tr>`).join('') || '<tr><td colspan="9" class="py-8 text-center text-slate-500">Belum ada hasil.</td></tr>'}</tbody></table></div></div>`;
+      $('#csv').onclick = () => {
+        const head = ['Waktu', 'Nama', 'Kelas', 'Username', 'Kasus', 'Skor', 'Max', 'Benar', 'Total', 'Petunjuk', 'Durasi(dtk)', 'Bintang'];
+        const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+        const csv = [head.join(',')].concat(r.map(x => [x.waktu, x.nama, x.kelas, x.username, x.kasus, x.skor, x.max, x.benar, x.total, x.petunjuk, x.durasi, x.bintang].map(q).join(','))).join('\n');
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' })); a.download = 'hasil_pasal_noir.csv'; a.click();
+      };
+    } else {
+      const s = await api('adminGetSettings');
+      body.innerHTML = `<form id="setF" class="glass mx-auto max-w-xl space-y-5 rounded-3xl p-6"><div><label class="mb-1.5 block text-xs font-bold text-slate-400">KODE PENDAFTARAN KELAS <span class="font-normal">(kosongkan = pendaftaran bebas)</span></label><div class="field"><i class="lead fa-solid fa-key"></i><input class="input" name="KodeDaftar" value="${esc(s.KodeDaftar)}" placeholder="mis. PKN8-2026"></div></div>
+        <div><label class="mb-1.5 block text-xs font-bold text-slate-400">PENGUMUMAN UNTUK SISWA</label><textarea class="input !pl-4" rows="3" name="Pengumuman" maxlength="200">${esc(s.Pengumuman)}</textarea></div>
+        <button class="btn btn-amber w-full" type="submit"><i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan</button></form>`;
+      $('#setF').onsubmit = async e => { e.preventDefault(); const f = new FormData(e.target); const ok = await run($('button', e.target), () => api('adminSetSettings', { KodeDaftar: f.get('KodeDaftar'), Pengumuman: f.get('Pengumuman') })); if (ok) { ui.toast('Pengaturan disimpan', 'success'); state.info.pengumuman = f.get('Pengumuman'); } };
+    }
+  } catch (e) { if (e.message !== '__handled') body.innerHTML = errBox(e.message).replace('goDash(state.tab)', `openAdmin('${tab}')`); }
+}
+
+async function userAct(act, id, nama) {
+  if (act === 'reset') {
+    const pw = await ui.prompt('Reset password', `Password baru untuk ${nama} (min. 6 karakter).`, { input: { type: 'text', placeholder: 'Password baru', icon: 'fa-key' } });
+    if (pw && await run(null, () => api('adminResetPass', id, pw))) ui.alert('Berhasil', `Password ${nama} sudah diganti. Sampaikan password baru kepada siswa.`, 'success');
+  } else if (act === 'toggle') {
+    const ok = await ui.confirm('Ubah status akun?', `Status akun ${nama} akan diubah (Aktif ⇄ Nonaktif).`, { type: 'warn', confirmText: 'Ubah' });
+    if (ok && await run(null, () => api('adminToggleUser', id))) { ui.toast('Status akun diubah', 'success'); openAdmin('users'); }
+  } else {
+    const ok = await ui.confirm('Hapus akun ini?', `Akun ${nama} dihapus permanen. Riwayat hasilnya tetap ada di spreadsheet.`, { type: 'danger', confirmText: 'Hapus', icon: 'fa-trash' });
+    if (ok && await run(null, () => api('adminDeleteUser', id))) { ui.toast('Akun dihapus', 'success'); openAdmin('users'); }
+  }
+}
+
+/* =====================================================================
+ *  BOOT
+ * ===================================================================== */
+(async function boot() {
+  await loadPublic();
+  const t = store.get(TOKEN_KEY);
+  if (t) {
+    state.token = t;
+    try { const s = await rpc('session'); state.user = s.user; $('#navAvatar').textContent = s.user.avatar; $('#navName').textContent = s.user.nama.split(' ')[0]; goDash('cases'); }
+    catch (e) { state.token = null; store.del(TOKEN_KEY); showView('landing'); }
+  } else showView('landing');
+  const l = $('#loader'); l.style.opacity = 0; setTimeout(() => l.remove(), 500);
+})();
+</script>
+</body>
+</html>
